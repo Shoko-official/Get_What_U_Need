@@ -51,7 +51,6 @@ class Player(PhysObj):
         self.slow_duration = 300
         
         self.speed_boost = 0
-        self.speed_boost = 0
         self.velocity_y = 0 
         
         self.combo_counter = 0 
@@ -63,8 +62,6 @@ class Player(PhysObj):
         
         self.god_mode = False 
         self.global_speed_mult = 1.0 
-
- 
 
     def load_all(self):
         self.animations = asset_loader.load_player(PLAYER_SCALE)
@@ -90,17 +87,10 @@ class Player(PhysObj):
             if keys[pygame.K_DOWN]:
                 self.rect.y += 10
                 self.velocity_y = 0
-                
-            # No jump or auto-run logic needed here as we control explicitely
-            # But we want to keep moving forward by default?
-            # User said "vitesse réglable". Let's assume auto-run continues but speed is adjustable.
-            # And self.direction.x is already set to 1 above.
         else:
             if (keys[pygame.K_SPACE] or keys[pygame.K_UP]):
                 if self.on_ground:
                     self.jump()
-
-
 
     def check_state(self):
         if self.hp <= 0 or self.withdrawal >= self.max_withdrawal or self.rect.top > DEATH_Y:
@@ -145,7 +135,7 @@ class Player(PhysObj):
             self.invincibility_timer = self.invincibility_duration
             self.just_damaged = True
             self.combo_counter = 0
-            self.speed_boost = 0 # reset boost en cas de hit
+            self.speed_boost = 0
             if self.hp <= 0:
                 self.hp = 0
                 return True
@@ -232,8 +222,6 @@ class Player(PhysObj):
             self.check_state()
             self.animate()
             return
-
-
 
         self.speed_boost = min(self.speed_boost + SPEED_INCREMENT_RATE * dt, MAX_SPEED_BOOST)
         self.apply_withdrawal()
@@ -327,7 +315,7 @@ class PowerUp(pygame.sprite.Sprite):
 
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, biome="street"):
-        self._layer = 0 # Ground in middle
+        self._layer = 0
         super().__init__()
         hitbox_offset = 0
         self.visual_offset_y = 0
@@ -368,7 +356,7 @@ class Weed(pygame.sprite.Sprite):
 
 class Prop(pygame.sprite.Sprite):
     def __init__(self, x, y, image):
-        self._layer = -1 # Props behind ground
+        self._layer = -1
         super().__init__()
         self.visual_offset_y = 0
         self.image = image
@@ -376,12 +364,11 @@ class Prop(pygame.sprite.Sprite):
 
 class TrashObstacle(pygame.sprite.Sprite):
     def __init__(self, x, y, image):
-        self._layer = -1 # Déchets derrière le sol
+        self._layer = -1
         super().__init__()
         self.image = image
         self.mask = get_mask(self.image)
         
-        # Tighter hitbox for trash
         trim_rect = self.image.get_bounding_rect()
         self.rect = pygame.Rect(0, 0, trim_rect.width, trim_rect.height)
         self.rect.midbottom = (x, y)
@@ -428,7 +415,6 @@ class Police(PhysObj):
             self.frame_index = 0
             
         self.image = animation[int(self.frame_index)]
-        # Flip logic supprimé
         self.mask = get_mask(self.image)
         self.image.set_alpha(255)
 
@@ -453,7 +439,6 @@ class Police(PhysObj):
         
         for trash in trash_obstacles:
             if self.rect.colliderect(trash.rect):
-
                 self.speed = 0 
         
         self.check_state()
@@ -472,7 +457,6 @@ class Bird(PhysObj):
         self.status = 'walk'
         self.direction.x = dir_x
         self.speed = random.randint(150, 250)
-        self.facing_right = dir_x > 0
         self.visual_offset_y = 0
 
     def update(self, dt, *args):
@@ -483,7 +467,6 @@ class Bird(PhysObj):
         animation = self.animations[self.status]
         self.image = animation[int(pygame.time.get_ticks() / 100) % len(animation)]
         self.mask = get_mask(self.image)
-        # Flip logic supprimé
 
 
 class Rat(PhysObj):
@@ -500,26 +483,21 @@ class Rat(PhysObj):
         self.status = 'walk'
         self.direction.x = dir_x
         self.speed = random.randint(50, 120)
-        self.facing_right = self.direction.x > 0
         self.visual_offset_y = -10 
-        
         self.velocity_y = 0
 
     def update(self, dt, platforms=None, *args):
         self.apply_gravity(dt)
         self.rect.x += self.direction.x * self.speed * dt
         self.on_ground = False
-        
         if platforms:
             self.check_platform_collisions(platforms)
-            
         self.animate()
         
     def animate(self):
         animation = self.animations[self.status]
         self.image = animation[int(pygame.time.get_ticks() / 100) % len(animation)]
         self.mask = get_mask(self.image)
-        # Flip logic supprimé
 
 
 class DeadRat(pygame.sprite.Sprite):
@@ -531,17 +509,16 @@ class DeadRat(pygame.sprite.Sprite):
         self.frame_index = 0
         self.animation_speed = 0.2
         self.playing = play_anim
-        self.facing_right = facing_right
         
         if self.frames:
             self.image = self.frames[0] if self.playing else self.frames[-1]
         else:
             img = asset_loader.fetch_img(ASSETS["rat"]["idle"]["p"])
             img = pygame.transform.scale(img, (48, 48))
-            self.image = pygame.transform.rotate(img, 90)
+            # Angle de -90 pour mettre le rat sur le dos sans être à l'envers
+            self.image = pygame.transform.rotate(img, -90)
             self.playing = False
             
-        # Flip logic supprimé
         self.rect = self.image.get_rect(midbottom=(x, y))
         
     def update(self, dt, *args):
@@ -551,15 +528,12 @@ class DeadRat(pygame.sprite.Sprite):
                 self.frame_index = len(self.frames) - 1
                 self.playing = False
             
-            img = self.frames[int(self.frame_index)]
-            # Flip logic supprimé
-            self.image = img
+            self.image = self.frames[int(self.frame_index)]
 
 class Drone(PhysObj):
     def __init__(self, groups, x, y, player):
         super().__init__(groups, x, y)
         self.player = player
-        
         self.drone_type = random.choice(["1", "2", "3", "4", "5", "6"])
         self.animations = asset_loader.load_drone(self.drone_type, scale=2)
         
@@ -571,10 +545,8 @@ class Drone(PhysObj):
         self.animation_speed = 0.15
         self.image = self.animations[self.status][self.frame_index]
         self.mask = get_mask(self.image)
-        # Fix hitbox: make it smaller than image for fairer gameplay
-        # Inflate negativement pour réduire.
         self.rect = self.image.get_rect(center=(x, y))
-        self.hitbox_rect = self.rect.inflate(-20, -20) # Hitbox logique plus petite
+        self.hitbox_rect = self.rect.inflate(-20, -20)
         
         self.visual_offset_y = 0
         self.target_offset_y = -180 
@@ -588,7 +560,6 @@ class Drone(PhysObj):
     
     def update(self, dt, *args):
         self.wobble += dt * 4
-        
         if self.retreating:
              self.rect.y -= 10
              self.rect.x += 5
@@ -610,11 +581,6 @@ class Drone(PhysObj):
         self.rect.centerx += (target_x - self.rect.centerx) * self.speed_x
         self.rect.centery += (target_y - self.rect.centery) * self.speed_y
         
-        if target_x > self.rect.centerx:
-             self.facing_right = True
-        else:
-             self.facing_right = False
-             
         if abs(target_x - self.rect.centerx) > 2:
              if 'walk' in self.animations: self.status = 'walk'
         else:
@@ -624,10 +590,8 @@ class Drone(PhysObj):
         
         if self.attack_cooldown > 0:
             self.attack_cooldown -= dt
-            if int(pygame.time.get_ticks() / 50) % 2 == 0:
-                self.image.set_alpha(100)
-            else:
-                self.image.set_alpha(255)
+            alpha = 100 if int(pygame.time.get_ticks() / 50) % 2 == 0 else 255
+            self.image.set_alpha(alpha)
             return 
         
         if pygame.sprite.collide_mask(self, self.player):
@@ -638,8 +602,7 @@ class Drone(PhysObj):
                  return
 
             if not self.player.invincible and not self.player.has_shield:
-                if self.player.take_damage(1):
-                     pass
+                self.player.take_damage(1)
                 self.retreating = True
                 return       
             elif self.player.has_shield:
@@ -658,7 +621,6 @@ class Wolf(PhysObj):
         self.rect = self.image.get_rect(midbottom=(x, y))
         self.direction.x = dir_x
         self.speed = random.randint(200, 300)
-        self.facing_right = dir_x > 0
         self.visual_offset_y = 0
 
     def update(self, dt, platforms=None, *args):
@@ -667,6 +629,11 @@ class Wolf(PhysObj):
         self.on_ground = False
         if platforms: self.check_platform_collisions(platforms)
         self.animate()
+        
+    def animate(self):
+        animation = self.animations[self.status]
+        self.image = animation[int(pygame.time.get_ticks() / 100) % len(animation)]
+        self.mask = get_mask(self.image)
 
 class Bear(PhysObj):
     def __init__(self, groups, x, y, dir_x=-1):
@@ -682,7 +649,6 @@ class Bear(PhysObj):
         self.rect = self.image.get_rect(midbottom=(x, y))
         self.direction.x = dir_x
         self.speed = random.randint(100, 180)
-        self.facing_right = dir_x > 0
         self.visual_offset_y = 0
 
     def update(self, dt, platforms=None, *args):
@@ -691,3 +657,8 @@ class Bear(PhysObj):
         self.on_ground = False
         if platforms: self.check_platform_collisions(platforms)
         self.animate()
+
+    def animate(self):
+        animation = self.animations[self.status]
+        self.image = animation[int(pygame.time.get_ticks() / 100) % len(animation)]
+        self.mask = get_mask(self.image)
