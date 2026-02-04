@@ -5,7 +5,7 @@ import random
 from state_machine import State
 from settings import *
 from sprites import Player, Obstacle, Weed, Bird, Rat, DeadRat, Prop, TrashObstacle, Police, PowerUp, Drone, Wolf, Bear
-
+# Biomes et trucs de jeu
 from effects import ParticleEmitter, HUD, ParallaxBackground, ParallaxLayer
 from asset_loader import asset_loader, play_sfx
 from assets_registry import ASSETS
@@ -13,26 +13,22 @@ from states.game_over_state import GameOverState
 
 
 class GameState(State):
-    def check_mask_collision(self, sprite1, sprite2):
-        if not hasattr(sprite1, 'mask') or not hasattr(sprite2, 'mask'):
-            return pygame.sprite.collide_rect(sprite1, sprite2)
+    def check_mask_collision(self, s1, s2):
+        # Collision propre avec les masques
+        if not hasattr(s1, 'mask') or not hasattr(s2, 'mask'):
+            return pygame.sprite.collide_rect(s1, s2)
             
-        def get_visual_rect(s):
-            off_x = getattr(s, 'visual_offset_x', 0)
-            off_y = getattr(s, 'visual_offset_y', 0)
-            v_rect = s.image.get_rect(midbottom=s.rect.midbottom)
-            v_rect.x += off_x
-            v_rect.y += off_y
-            return v_rect
+        def visual_rect(s):
+            # Rect de dessin avec les offsets
+            bx = s.image.get_rect(midbottom=s.rect.midbottom)
+            bx.x += getattr(s, 'visual_offset_x', 0)
+            bx.y += getattr(s, 'visual_offset_y', 0)
+            return bx
 
-        v1 = get_visual_rect(sprite1)
-        v2 = get_visual_rect(sprite2)
+        v1, v2 = visual_rect(s1), visual_rect(s2)
+        if not v1.colliderect(v2): return False
         
-        if not v1.colliderect(v2):
-            return False
-        
-        offset = (v2.x - v1.x, v2.y - v1.y)
-        return sprite1.mask.overlap(sprite2.mask, offset) is not None
+        return s1.mask.overlap(s2.mask, (v2.x - v1.x, v2.y - v1.y)) is not None
 
     def __init__(self, brain):
         super().__init__(brain)
@@ -57,25 +53,16 @@ class GameState(State):
         
         self.death_triggered = False
         self.death_timer = 0.0      
-        self.death_delay_duration = 1.5 
         self.slow_motion_factor = 1.0
-        self.death_zoom = 1.0 
         
         self.drone_cooldown = 0 
         self.current_biome = "street"
-        
         self.show_hitboxes = False
         
         # Stats pour les quêtes
         self.run_stats = {
-            "dist": 0,
-            "weed": 0,
-            "rats": 0,
-            "birds": 0,
-            "drones": 0,
-            "shield": 0,
-            "magnet": 0,
-            "combo": 0
+            "dist": 0, "weed": 0, "rats": 0, "birds": 0,
+            "drones": 0, "shield": 0, "magnet": 0, "combo": 0
         }
 
 
@@ -146,7 +133,7 @@ class GameState(State):
 
         self.player = Player(self.all_sprites)
         self.police = Police(self.all_sprites, self.player)
-        self.player.invincibility_timer = 120 
+        self.player.invincibility_timer = 120 # Petit buff au debut
 
     def get_biome_at(self, x_pos):
         score_equivalent = int(x_pos / 100)
@@ -316,6 +303,12 @@ class GameState(State):
                     return
                     
                 if event.key == pygame.K_g:
+                    from progression import progression
+                    progression.state["credits"] += 1000
+                    progression.commit()
+                    play_sfx("click")
+                    
+                if event.key == pygame.K_k:
                     self.player.god_mode = not self.player.god_mode
                     
                 if event.key == pygame.K_h:
@@ -353,17 +346,15 @@ class GameState(State):
         if self.drone_cooldown > 0:
             self.drone_cooldown -= actual_dt
         
-        # Centre la caméra à l'écran
-        target_cam_x = self.player.rect.centerx - SCREEN_WIDTH // 2
-        self.camera_x = max(0, target_cam_x)
+        # Camera lockée au milieu
+        t_cam = self.player.rect.centerx - SCREEN_WIDTH // 2
+        self.camera_x = max(0, t_cam)
 
-        distance_score = int(self.camera_x / 100)
-        if distance_score > self.score: 
-            self.score = distance_score
+        self.score = max(self.score, int(self.camera_x / 100))
 
-        speed_increase = min(0.6, self.camera_x / 50000.0) 
-        speed_increase = min(0.6, self.camera_x / 50000.0) 
-        self.player.global_speed_mult = 1.0 + speed_increase
+        # Augmentation de la difficulté auto
+        diff_mult = 1.0 + min(0.6, self.camera_x / 50000.0) 
+        self.player.global_speed_mult = diff_mult
         
         self.update_visuals()
         self.update_fade(actual_dt)
@@ -411,64 +402,61 @@ class GameState(State):
         Bird([self.all_sprites, self.mobs], x, y, -1)
 
     def check_interactions(self):
-        # 1. Stomp - Ultra clément (Rectangle seulement)
-        for mob in list(self.mobs):
-            # On utilise un rectangle de détection au dessus
-            # Fix: On vérifie aussi si on est au sol, car parfois velocity_y est reset avant ce check
-            falling_or_landed = self.player.velocity_y > 0 or (self.player.on_ground and self.player.rect.bottom <= mob.rect.centery + 35)
+        # Stomp - Ultra clément (Rectangle seulement)
+        for m in list(self.mobs):
+            # On check si on tombe ou si on vient de se poser
+            ca_tombe = self.player.velocity_y > 0 or (self.player.on_ground and self.player.rect.bottom <= m.rect.centery + 35)
             
-            if falling_or_landed and self.player.rect.colliderect(mob.rect):
-                # Si on est au dessus de ses fesses (bottom < centery)
-                # Correction: Tolérance réduite pour éviter de tuer les rats en marchant dessus
-                # On utilise centery + un petit offset, mais pas 35 px !
-                stomp_threshold = mob.rect.centery + 10
-                if isinstance(mob, Bird):
-                    stomp_threshold = mob.rect.centery + 40 # Beaucoup plus de marge pour écraser les oiseaux
+            if ca_tombe and self.player.rect.colliderect(m.rect):
+                # Tolerance seuil pour le stomp
+                seuil = m.rect.centery + 10
+                if isinstance(m, Bird): seuil = m.rect.centery + 40
                 
-                if self.player.rect.bottom < stomp_threshold: 
-                    mob.kill()
+                if self.player.rect.bottom < seuil: 
+                    m.kill()
                     self.player.bounce()
-                    self.emitter.enemy_killed(mob.rect.centerx, mob.rect.centery, self.particles)
-                    if isinstance(mob, Rat):
+                    self.emitter.enemy_killed(m.rect.centerx, m.rect.centery, self.particles)
+                    if isinstance(m, Rat):
                         self.run_stats["rats"] += 1
-                        DeadRat(mob.rect.centerx, mob.rect.bottom, self.all_sprites, play_anim=True, facing_right=mob.facing_right)
-                    elif isinstance(mob, Bird):
+                        DeadRat(m.rect.centerx, m.rect.bottom, self.all_sprites, play_anim=True, facing_right=m.facing_right)
+                    elif isinstance(m, Bird):
                         self.run_stats["birds"] += 1
                     continue
 
-            # Cas particulier Bird/Drone : Collision plus facile
-            is_flying = isinstance(mob, (Bird, Drone))
+            # Check collisions volants
+            volant = isinstance(m, (Bird, Drone))
             hit = False
             
-            if is_flying:
-                if self.player.rect.inflate(-10, -10).colliderect(mob.rect):
+            hit = False
+            if volant:
+                if self.player.rect.inflate(-10, -10).colliderect(m.rect):
                     hit = True
             
-            if not hit and self.check_mask_collision(self.player, mob):
+            if not hit and self.check_mask_collision(self.player, m):
                 hit = True
 
             if hit:
-                # EFFET DU BOUCLIER SUR TOUT LE MONDE
                 if self.player.has_shield:
-                    if isinstance(mob, Rat): self.run_stats["rats"] += 1
-                    elif isinstance(mob, Bird): self.run_stats["birds"] += 1
-                    elif isinstance(mob, Drone): self.run_stats["drones"] += 1
+                    # Bouclier actif : on defonce le mob
+                    if isinstance(m, Rat): self.run_stats["rats"] += 1
+                    elif isinstance(m, Bird): self.run_stats["birds"] += 1
+                    elif isinstance(m, Drone): self.run_stats["drones"] += 1
                     
-                    mob.kill()
+                    m.kill()
                     self.score += 10
-                    self.emitter.enemy_killed(mob.rect.centerx, mob.rect.centery, self.particles)
+                    self.emitter.enemy_killed(m.rect.centerx, m.rect.centery, self.particles)
                     continue
 
-                if isinstance(mob, Drone):
-                    # Il nous touche ? On prend cher + Il se barre
+                if isinstance(m, Drone):
+                    # Le drone nous touche
                     if not self.player.invincible:
                         self.player.take_damage(1)
                         
                     self.emitter.drone_hit(self.player.rect.centerx, self.player.rect.centery, self.particles)
                     play_sfx("hurt", 0.4)
                     
-                    if hasattr(mob, 'retreating'):
-                        mob.retreating = True
+                    if hasattr(m, 'retreating'):
+                        m.retreating = True
                 else:
                     if self.player.take_damage(1):
                         self.trigger_death("WASTED")
@@ -548,9 +536,9 @@ class GameState(State):
         self.parallax_bg.draw(self.render_surface, self.camera_x)
         
         if self.next_parallax_bg:
-            # Draw next bg on a temp surface with alpha
+            # Dessine le prochain background sur une surface temporaire avec de l'alpha pour le fondu
             temp_bg = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-            temp_bg.set_colorkey((0,0,0)) # Transparent
+            temp_bg.set_colorkey((0,0,0)) # Transparence
             self.next_parallax_bg.draw(temp_bg, self.camera_x)
             temp_bg.set_alpha(int(self.fade_alpha))
             self.render_surface.blit(temp_bg, (0,0))
@@ -569,34 +557,18 @@ class GameState(State):
              self.render_surface.blit(particle.image, p_offset)
              
         if self.show_hitboxes:
-            for sprite in self.all_sprites:
-                # Don't draw red hitbox for Player or Police as requested
-                # Don't draw red hitbox
-                # if sprite == self.player or sprite == self.police: pass
-                # else:
-                #     # Draw Rect (Red)
-                #     rect = sprite.rect.move(-self.camera_x, 0)
-                #     pygame.draw.rect(self.render_surface, (255, 0, 0), rect, 1)
-                
-                # Draw Mask Outline (Green)
-                if hasattr(sprite, 'mask'):
-                    points = sprite.mask.outline()
-                    if points:
-                         # Outline points are relative to top-left of the mask (which aligns with sprite.rect.topleft usually)
-                         # However, sprite.image can be offset from sprite.rect in draw loop logic,
-                         # but mask is usually built from image. 
-                         # Let's align it with visual_rect used in drawing.
+            for s in self.all_sprites:
+                if hasattr(s, 'mask'):
+                    pts = s.mask.outline()
+                    if pts:
+                         h_rect = s.rect.move(-self.camera_x, 0)
+                         v_rect = s.image.get_rect(midbottom=h_rect.midbottom)
+                         v_rect.x += getattr(s, 'visual_offset_x', 0)
+                         v_rect.y += getattr(s, 'visual_offset_y', 0)
                          
-                         hitbox_rect = sprite.rect.move(-self.camera_x, 0)
-                         offset_x = getattr(sprite, 'visual_offset_x', 0)
-                         offset_y = getattr(sprite, 'visual_offset_y', 0)
-                         visual_rect = sprite.image.get_rect(midbottom=hitbox_rect.midbottom)
-                         visual_rect.x += offset_x
-                         visual_rect.y += offset_y
-                         
-                         adjusted_points = [(p[0] + visual_rect.x, p[1] + visual_rect.y) for p in points]
-                         if len(adjusted_points) > 1:
-                            pygame.draw.lines(self.render_surface, (0, 255, 0), True, adjusted_points, 1)
+                         pts_adj = [(p[0] + v_rect.x, p[1] + v_rect.y) for p in pts]
+                         if len(pts_adj) > 1:
+                            pygame.draw.lines(self.render_surface, (50, 255, 50), True, pts_adj, 1)
              
         final_surface = self.apply_shake(self.render_surface)
         surface.blit(final_surface, (0, 0))

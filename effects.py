@@ -210,7 +210,7 @@ class HUD:
             title = self.font_sub.render("OBJECTIFS EN COURS", True, (0, 180, 255))
             surface.blit(title, title.get_rect(centerx=cx, top=py + 20))
             
-            for i, q in enumerate(progression.data["quests"]):
+            for i, q in enumerate(progression.state["quests"]):
                 qy = py + 80 + i * 120
                 q_rect = pygame.Rect(px + 30, qy, panel_w - 60, 100)
                 
