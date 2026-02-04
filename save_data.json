@@ -1,12 +1,12 @@
 {
-    "money": 0,
+    "credits": 100,
     "quests": [
         {
             "id": "distance",
             "title": "Marathonien",
             "desc": "Parcours 1173m dans le ghetto",
             "goal": 1173,
-            "current": 28,
+            "current": 876,
             "reward": 150,
             "goal_type": "dist",
             "completed": false,
@@ -17,7 +17,7 @@
             "title": "Chasseur urbain",
             "desc": "\u00c9limine 9 pigeons/oiseaux",
             "goal": 9,
-            "current": 0,
+            "current": 3,
             "reward": 130,
             "goal_type": "birds",
             "completed": false,
@@ -28,17 +28,30 @@
             "title": "Cyber-Guerrier",
             "desc": "D\u00e9truis 3 drones de surveillance",
             "goal": 3,
-            "current": 0,
+            "current": 1,
             "reward": 250,
             "goal_type": "drones",
             "completed": false,
             "claimed": false
         }
     ],
+    "unlocked_sets": [
+        "default",
+        "knights",
+        "werewolves",
+        "ninja_monk",
+        "kunoichi",
+        "samurai",
+        "fighters",
+        "vampires"
+    ],
+    "unlocked_items": [],
+    "active_skin_set": "vampires",
+    "active_variant": "Countess_Vampire",
     "stats": {
         "total_dist": 0,
         "total_weed": 0,
         "total_kills": 0
     },
-    "credits": 0
+    "money": 0
 }

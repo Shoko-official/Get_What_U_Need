@@ -156,5 +156,68 @@ ASSETS = {
             "click": "audio/sfx/click.wav",
             "jump": "audio/sfx/falLguys.wav"
         }
+    },
+
+    "boutique_sets": {
+        "knights": {
+            "name": "ORDRE DES CHEVALIERS",
+            "price": 1500,
+            "variants": ["Knight_1", "Knight_2", "Knight_3"],
+            "base_w": 128, "base_h": 128,
+            "fps": 6  
+        },
+        "werewolves": {
+            "name": "MEUTE DE LOUPS",
+            "price": 2000,
+            "variants": ["Black_Werewolf", "Red_Werewolf", "White_Werewolf"],
+            "base_w": 128, "base_h": 128,
+            "fps": 12
+        },
+        "kunoichi": {
+            "name": "KUNOICHI",
+            "price": 1000,
+            "variants": ["Kunoichi"],
+            "base_w": 128, "base_h": 128,
+            "fps": 14
+        },
+        "samurai": {
+            "name": "SAMURAÏ DU GHETTO",
+            "price": 1200,
+            "variants": ["Samurai", "Samurai_Archer", "Samurai-2"],
+            "base_w": 128, "base_h": 128,
+            "fps": 10
+        },
+        "vampires": {
+            "name": "COVEN DES VAMPIRES",
+            "price": 2500,
+            "variants": ["Converted_Vampire", "Countess_Vampire", "Vampire_Girl"],
+            "base_w": 128, "base_h": 128,
+            "fps": 10
+        },
+        "fighters": {
+            "name": "COMBATTANTS URBAINS",
+            "price": 900,
+            "variants": ["Fighter", "Shinobi"],
+            "base_w": 128, "base_h": 128,
+            "fps": 12
+        }
+    },
+
+    "boutique_items": {
+        "Knight_1": {"name": "CHEVALIER DE FER (UNITÉ)", "price": 600, "fps": 6, "var": "Knight_1"},
+        "Knight_2": {"name": "CHEVALIER D'OR (UNITÉ)", "price": 700, "fps": 6, "var": "Knight_2"},
+        "Knight_3": {"name": "CHEVALIER SOMBRE (UNITÉ)", "price": 750, "fps": 6, "var": "Knight_3"},
+        "Black_Werewolf": {"name": "LOUP NOIR (UNITÉ)", "price": 800, "fps": 12, "var": "Black_Werewolf"},
+        "Red_Werewolf": {"name": "LOUP ROUGE (UNITÉ)", "price": 850, "fps": 12, "var": "Red_Werewolf"},
+        "White_Werewolf": {"name": "LOUP BLANC (UNITÉ)", "price": 900, "fps": 12, "var": "White_Werewolf"},
+        "Samurai": {"name": "SAMURAÏ (UNITÉ)", "price": 500, "fps": 10, "var": "Samurai"},
+        "Samurai_Archer": {"name": "ARCHER SAMURAÏ (UNITÉ)", "price": 550, "fps": 10, "var": "Samurai_Archer"},
+        "Samurai-2": {"name": "SAMURAÏ SOMBRE (UNITÉ)", "price": 600, "fps": 10, "var": "Samurai-2"},
+        "Converted_Vampire": {"name": "VAMPIRE (UNITÉ)", "price": 1000, "fps": 10, "var": "Converted_Vampire"},
+        "Countess_Vampire": {"name": "COMTESSE VAMPIRE (UNITÉ)", "price": 1200, "fps": 10, "var": "Countess_Vampire"},
+        "Vampire_Girl": {"name": "FILLE VAMPIRE (UNITÉ)", "price": 1100, "fps": 10, "var": "Vampire_Girl"},
+        "Fighter": {"name": "COMBATTANT (UNITÉ)", "price": 400, "fps": 12, "var": "Fighter"},
+        "Shinobi": {"name": "SHINOBI (UNITÉ)", "price": 450, "fps": 12, "var": "Shinobi"},
+        "Kunoichi": {"name": "KUNOICHI (UNITÉ)", "price": 600, "fps": 14, "var": "Kunoichi"}
     }
 }
