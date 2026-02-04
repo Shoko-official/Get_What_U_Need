@@ -461,7 +461,7 @@ class MenuState(State):
             surface.blit(l1, l1.get_rect(centerx=exch_btn.centerx, top=exch_btn.top + 6))
             
             # Ligne 2 : Montant
-            l2 = self.font_rules_body.render(f"{ws}u -> {gain} Cr", True, (100, 255, 100))
+            l2 = self.font_rules_body.render(f"{ws} items = {gain} Cr", True, (100, 255, 100))
             surface.blit(l2, l2.get_rect(centerx=exch_btn.centerx, bottom=exch_btn.bottom - 6))
 
         from assets_registry import ASSETS

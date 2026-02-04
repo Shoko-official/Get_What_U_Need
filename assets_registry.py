@@ -42,8 +42,14 @@ ASSETS = {
         "ground_foret": f"{ENV_DIR}/props/ground_park.png",
     },
 
+
     "items": {
         "weed": "graphics/items/weed.png", 
+        "blood": "graphics/items/blood.png",
+        "biceps": "graphics/items/biceps.png",
+        "ramen": "graphics/items/ramen.png",
+        "red_cap": "graphics/items/red_cap.png",
+        "ammo_box": "graphics/items/ammo_box.png",
         "heart": "graphics/items/heart.png",
         "magnet": "graphics/items/magnet.png",
         "shield": "graphics/items/shield.png",
@@ -226,5 +232,15 @@ ASSETS = {
         "Fighter": {"name": "COMBATTANT (UNITÉ)", "price": 400, "fps": 12, "var": "Fighter"},
         "Shinobi": {"name": "SHINOBI (UNITÉ)", "price": 450, "fps": 12, "var": "Shinobi"},
         "Kunoichi": {"name": "KUNOICHI (UNITÉ)", "price": 600, "fps": 14, "var": "Kunoichi"}
+    },
+
+    "collectible_map": {
+        "vampires": "blood",
+        "knights": "biceps",
+        "samurai": "ramen",
+        "werewolves": "red_cap",
+        "fighters": "ammo_box",
+        # Default fallback
+        "default": "weed"
     }
 }
