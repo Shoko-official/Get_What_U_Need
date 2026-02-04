@@ -248,7 +248,10 @@ class MenuState(State):
                     # Clic sur les boutons de récompense
                     for i, q in enumerate(progression.state["quests"]):
                         if q["completed"] and not q["claimed"]:
-                            btn_claim = pygame.Rect(panel.left + PANEL_W - 160, panel.top + 100 + i * 140, 140, 40)
+                            # Position alignée avec _draw_missions_panel
+                            card_y = panel.top + 100 + i * 145
+                            btn_claim = pygame.Rect(panel.left + PANEL_W - 165, card_y + 80, 120, 35)
+                            
                             if btn_claim.collidepoint(souris):
                                 if progression.claim(i):
                                     play_sfx("click")
@@ -694,92 +697,127 @@ class MenuState(State):
 
     def _draw_missions_panel(self, surface):
         panel = self._panel_rect()
-        panneau = pygame.Surface((PANEL_W, PANEL_H), pygame.SRCALPHA)
-        panneau.fill((0, 0, 0, min(self.mission_alpha, 210))) 
-        surface.blit(panneau, panel.topleft)
-        pygame.draw.rect(surface, C_GOLD, panel, width=3, border_radius=14)
+        
+        # Fond Glassmorphism (Thème Violet/Rose)
+        overlay = pygame.Surface((PANEL_W, PANEL_H), pygame.SRCALPHA)
+        overlay.fill((15, 10, 20, 245))
+        surface.blit(overlay, panel.topleft)
+        
+        THEME_COLOR = (200, 50, 255) 
+        pygame.draw.rect(surface, THEME_COLOR, panel, width=3, border_radius=20)
 
-        # Bouton fermer
-        bouton_fermer = pygame.Rect(panel.right - 50, panel.top + 10, 40, 40)
+        # En-tête
+        header_rect = pygame.Rect(panel.left, panel.top, panel.width, 80)
+        pygame.draw.rect(surface, (THEME_COLOR[0], THEME_COLOR[1], THEME_COLOR[2], 50), header_rect, border_top_left_radius=20, border_top_right_radius=20)
+
+        # Bouton Fermer
+        btn_close = pygame.Rect(panel.right - 60, panel.top + 10, 50, 50)
         souris = pygame.mouse.get_pos()
-        couleur = (255, 100, 100) if bouton_fermer.collidepoint(souris) else C_WHITE_DIM
-        croix = self.font_title.render("×", True, couleur)
-        surface.blit(croix, croix.get_rect(center=bouton_fermer.center))
+        close_col = (255, 50, 50) if btn_close.collidepoint(souris) else (200, 200, 200)
+        surface.blit(self.font_title.render("×", True, close_col), btn_close.topleft)
 
-        title = self.font_title.render("MISSIONS DE RUE", True, C_RULE_TITLE)
-        surface.blit(title, title.get_rect(centerx=panel.centerx, top=panel.top + 20))
+        # Titre
+        title = self.font_title.render("MISSIONS", True, THEME_COLOR)
+        title = pygame.transform.scale(title, (int(title.get_width() * 0.6), int(title.get_height() * 0.6)))
+        surface.blit(title, (panel.left + 30, panel.top + 15))
 
-        # Missions
+        sub_title = self.font_rules_body.render("Complète les objectifs pour gagner des CR", True, (180, 180, 200))
+        surface.blit(sub_title, (panel.left + 32, panel.top + 55))
+
+        # Liste des missions
+        content_top = panel.top + 100
+        
         for i, q in enumerate(progression.state["quests"]):
-            y = panel.top + 100 + i * 140
-            rect = pygame.Rect(panel.left + 20, y, PANEL_W - 40, 130)
+            card_h = 130
+            y = content_top + i * 145 # Marge 15px entre les cartes (130+15)
+            rect = pygame.Rect(panel.left + 25, y, PANEL_W - 50, card_h)
             
-            # Fond de la carte mission
-            bg_color = (35, 35, 45, 180)
-            if q["claimed"]: bg_color = (25, 25, 30, 120)
-            pygame.draw.rect(surface, bg_color, rect, border_radius=15)
+            is_hover = rect.collidepoint(souris)
             
-            # Bordure brillante si complétée
-            if q["completed"] and not q["claimed"]:
-                pygame.draw.rect(surface, (100, 255, 100), rect, width=2, border_radius=15)
+            # Fond de carte
+            if q["claimed"]:
+                bg_col = (20, 20, 25)
+                border_col = (60, 60, 70)
+            elif q["completed"]:
+                bg_col = (30, 50, 30)
+                border_col = (50, 255, 100)
             else:
-                pygame.draw.rect(surface, (70, 70, 80), rect, width=1, border_radius=15)
+                bg_col = (30, 25, 35) if not is_hover else (40, 30, 50)
+                border_col = (80, 60, 100) if not is_hover else THEME_COLOR
+
+            pygame.draw.rect(surface, bg_col, rect, border_radius=15)
+            pygame.draw.rect(surface, border_col, rect, width=2 if (q["completed"] and not q["claimed"]) else 1, border_radius=15)
             
-            # Titre mission
-            status_tag = ""
-            if q["claimed"]: status_tag = " [VALIDÉ]"
-            elif q["completed"]: status_tag = " [PRÊT]"
+            # Indicateur gauche
+            if not q["claimed"]:
+                acc_col = (50, 255, 100) if q["completed"] else THEME_COLOR
+                pygame.draw.rect(surface, acc_col, (rect.left, rect.top + 15, 4, rect.height - 30), border_radius=2)
+
+            # Titre Mission
+            t_col = (255, 255, 255)
+            if q["claimed"]: t_col = (100, 100, 100)
+            elif q["completed"]: t_col = (150, 255, 150)
             
-            color = (120, 255, 120) if q["completed"] else (220, 220, 230)
-            if q["claimed"]: color = (100, 100, 100)
-            
-            q_title = self.font_rules_title.render(q["title"] + status_tag, True, color)
-            surface.blit(q_title, (rect.left + 25, rect.top + 18))
-            
-            # Description
+            q_title = self.font_rules_title.render(q["title"].upper(), True, t_col)
+            surface.blit(q_title, (rect.left + 25, rect.top + 15))
+
+            # Statut
+            if q["claimed"]:
+                badge_txt = "TERMINÉ"
+                badge_col = (80, 80, 80)
+            elif q["completed"]:
+                badge_txt = "SUCCÈS !"
+                badge_col = (50, 200, 80)
+            else:
+                badge_txt = "EN COURS"
+                badge_col = (150, 150, 180)
+
+            badge_surf = self.font_rules_body.render(badge_txt, True, badge_col)
+            surface.blit(badge_surf, (rect.right - badge_surf.get_width() - 20, rect.top + 18))
+
+            # Description dynamique
             desc_txt = q["desc"]
             if q["id"] == "weed":
-                # Hack pour mettre à jour le nom de l'objet dynamique
                 _, item_name = progression.get_active_collectible()
                 parts = desc_txt.split(" ")
                 if len(parts) >= 2 and parts[0] == "Collecte":
-                     desc_txt = f"{parts[0]} {parts[1]} {item_name}"
+                     desc_txt = desc_txt.replace("pochons", item_name)
             
-            q_desc = self.font_rules_body.render(desc_txt, True, (180, 180, 190) if not q["claimed"] else (80, 80, 80))
-            surface.blit(q_desc, (rect.left + 25, rect.top + 48))
-            
-            # Barre de progression plus stylée
-            bar_w = 340
-            bar_h = 8
-            bar_rect = pygame.Rect(rect.left + 25, rect.top + 78, bar_w, bar_h)
-            pygame.draw.rect(surface, (40, 40, 50), bar_rect, border_radius=4)
-            
-            progress = q["current"] / q["goal"]
-            if progress > 0:
-                p_color = (0, 180, 255) if not q["completed"] else (0, 255, 150)
-                if q["claimed"]: p_color = (60, 60, 60)
-                prog_rect = pygame.Rect(bar_rect.left, bar_rect.top, int(bar_w * progress), bar_h)
-                pygame.draw.rect(surface, p_color, prog_rect, border_radius=4)
-            
-            # Texte progression
-            p_txt = f"{q['current']} / {q['goal']}"
-            p_surf = self.font_rules_body.render(p_txt, True, (200, 200, 210) if not q["claimed"] else (80, 80, 80))
-            surface.blit(p_surf, (bar_rect.right + 20, bar_rect.top - 6))
-            
-            # Récompense avec icône (simulée par couleur)
-            r_txt = f"Prime: {q['reward']} CR"
-            r_surf = self.font_rules_body.render(r_txt, True, C_GOLD if not q["claimed"] else (80, 70, 40))
-            surface.blit(r_surf, (rect.left + 25, rect.top + 98))
+            d_col = (180, 180, 190) if not q["claimed"] else (80, 80, 80)
+            q_desc = self.font_rules_body.render(desc_txt, True, d_col)
+            surface.blit(q_desc, (rect.left + 25, rect.top + 45))
 
-            # Bouton récupérer
+            # Barre de progression
+            bar_w = 400
+            bar_h = 6
+            bar_x = rect.left + 25
+            bar_y = rect.bottom - 35
+            
+            pygame.draw.rect(surface, (20, 20, 30), (bar_x, bar_y, bar_w, bar_h), border_radius=3)
+            
+            pct = min(1.0, max(0.0, q["current"] / q["goal"]))
+            if pct > 0:
+                fill_w = int(bar_w * pct)
+                f_col = THEME_COLOR if not q["completed"] else (50, 255, 100)
+                if q["claimed"]: f_col = (60, 60, 70)
+                pygame.draw.rect(surface, f_col, (bar_x, bar_y, fill_w, bar_h), border_radius=3)
+
+            prog_txt = f"{int(q['current'])} / {q['goal']}"
+            prog_surf = self.font_rules_body.render(prog_txt, True, d_col)
+            surface.blit(prog_surf, (bar_x + bar_w + 15, bar_y - 6))
+
+            # Récompense / Bouton action
             if q["completed"] and not q["claimed"]:
-                btn_r = pygame.Rect(rect.right - 170, rect.top + 45, 150, 45)
-                is_hover = btn_r.collidepoint(souris)
-                # Effet de pulse/glow simulé
-                btn_color = (100, 255, 150) if is_hover else (60, 180, 100)
-                pygame.draw.rect(surface, btn_color, btn_r, border_radius=12)
-                pygame.draw.rect(surface, C_WHITE_DIM, btn_r, width=2, border_radius=12)
+                btn_r = pygame.Rect(rect.right - 140, rect.bottom - 50, 120, 35)
+                h_btn = btn_r.collidepoint(souris)
                 
-                r_text = self.font_btn.render("RÉCUPÉRER", True, (20, 40, 20))
-                r_text = pygame.transform.scale(r_text, (130, 32))
-                surface.blit(r_text, r_text.get_rect(center=btn_r.center))
+                b_c = (50, 200, 100) if h_btn else (30, 120, 60)
+                pygame.draw.rect(surface, b_c, btn_r, border_radius=8)
+                
+                t_btn = self.font_rules_body.render("RÉCUPÉRER", True, (10, 30, 10))
+                surface.blit(t_btn, t_btn.get_rect(center=btn_r.center))
+            else:
+                r_txt = f"+ {q['reward']} CR"
+                r_col = (255, 200, 50) if not q["claimed"] else (100, 90, 60)
+                r_surf = self.font_price.render(r_txt, True, r_col)
+                surface.blit(r_surf, (rect.right - r_surf.get_width() - 20, rect.bottom - 35))
