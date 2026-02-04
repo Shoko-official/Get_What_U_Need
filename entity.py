@@ -13,7 +13,6 @@ class PhysObj(pygame.sprite.Sprite):
         self.velocity_y = 0
         self.on_ground = False
         
-        self.facing_right = True
         self.status = 'idle'
         
         self.image = pygame.Surface((32, 32))
@@ -53,9 +52,7 @@ class PhysObj(pygame.sprite.Sprite):
         if self.frame_index >= len(animation):
             self.frame_index = 0
         
-        image = animation[int(self.frame_index)]
-        self.image = image.copy()
-        
+        self.image = animation[int(self.frame_index)]
         self.mask = pygame.mask.from_surface(self.image)
         
         if hasattr(self, 'invincible') and self.invincible:
