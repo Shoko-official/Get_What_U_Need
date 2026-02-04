@@ -392,7 +392,36 @@ class Weed(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.visual_offset_y = 0
-        self.image = asset_loader.fetch_img(ASSETS["items"]["weed"], alpha=True)
+        
+        # Choix du sprite selon le thème du perso
+        from progression import progression
+        active = progression.state.get("active_skin_set", "default")
+        
+        c_map = ASSETS.get("collectible_map", {})
+        # 1. Check direct (si c'est un set)
+        key = c_map.get(active)
+        
+        # 2. Si pas trouvé, c'est peut-être un item isolé -> on cherche son set parent
+        if not key:
+            key = "weed" # default
+            for s_name, s_cfg in ASSETS.get("boutique_sets", {}).items():
+                if active == s_name or active in s_cfg.get("variants", []):
+                    key = c_map.get(s_name, "weed")
+                    break
+        
+        # Charge l'image
+        try:
+            path = ASSETS["items"].get(key, ASSETS["items"]["weed"])
+            self.image = asset_loader.fetch_img(path, alpha=True)
+        except:
+            self.image = asset_loader.fetch_img(ASSETS["items"]["weed"], alpha=True)
+            
+        # Un peu de resize pour que ce soit homogène
+        if self.image.get_width() > 48:
+             self.image = pygame.transform.scale(self.image, (40, 40))
+        elif self.image.get_width() < 20: 
+             self.image = pygame.transform.scale(self.image, (32, 32))
+             
         self.mask = get_mask(self.image)
         self.rect = self.image.get_rect(midbottom=(x, y - 50))
 
