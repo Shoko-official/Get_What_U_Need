@@ -10,7 +10,7 @@ ASSET_DIR = BASE_DIR / 'assets'
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 FPS = 60
-TITLE = "Get My Weed - Bad Trip Edition"
+TITLE = "Get What U Need - Bad Trip Edition"
 
 # --- PHYSIQUE ---
 # Faut que ça saute bien, pas trop flottant

@@ -333,7 +333,7 @@ class MenuState(State):
         mouvement = math.sin(self.t * 2.5) * 4
 
         # Titre text
-        txt_raw = "GET MY WEED"
+        txt_raw = "GET WHAT U NEED"
 
         # Ombre
         ombre = self.font_title.render(txt_raw, True, C_BLACK)
