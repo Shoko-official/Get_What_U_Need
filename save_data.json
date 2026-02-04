@@ -1,5 +1,5 @@
 {
-  "credits": 47384,
+  "credits": 47334,
   "quests": [
     {
       "id": "distance",
@@ -47,13 +47,14 @@
   ],
   "unlocked_items": [
     "Kunoichi",
-    "Countess_Vampire"
+    "Countess_Vampire",
+    "Shinobi"
   ],
   "active_skin_set": "default",
   "active_variant": null,
   "stats": {
-    "total_dist": 110,
-    "total_weed": 23,
+    "total_dist": 385,
+    "total_weed": 73,
     "total_kills": 0
   },
   "weed_stash": 0
