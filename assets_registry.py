@@ -147,6 +147,14 @@ ASSETS = {
     },
 
     "audio": {
-        "music_bg": "audio/music/background_music.wav"
+        "music_bg": "audio/music/background_music.wav",
+        "sfx": {
+            "hurt": "audio/sfx/Degats.wav",
+            "game_over": "audio/sfx/GameOver.wav",
+            "trash_fall": "audio/sfx/PoubelleFall.wav",
+            "arrest": "audio/sfx/Sound-arrest.wav",
+            "click": "audio/sfx/click.wav",
+            "jump": "audio/sfx/falLguys.wav"
+        }
     }
 }

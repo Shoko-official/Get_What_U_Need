@@ -4,7 +4,7 @@ import random
 
 from settings import *
 from entity import PhysObj
-from asset_loader import asset_loader 
+from asset_loader import asset_loader, play_sfx
 from assets_registry import ASSETS
 
 def get_mask(surface):
@@ -139,6 +139,7 @@ class Player(PhysObj):
             if self.hp <= 0:
                 self.hp = 0
                 return True
+            play_sfx("hurt", 0.6)
         return False
 
     def jump(self):
@@ -146,12 +147,14 @@ class Player(PhysObj):
         self.is_jumping = True
         self.on_ground = False
         self.rect.y -= 5 
+        play_sfx("jump", 0.4)
 
     def bounce(self):
         self.velocity_y = BOUNCE_FORCE
         self.is_jumping = True
         self.on_ground = False
         self.combo_counter += 1
+        play_sfx("jump", 0.3)
 
     def apply_gravity(self, dt):
         if self.god_mode:
@@ -174,6 +177,7 @@ class Player(PhysObj):
                 if self.rect.bottom > trash.rect.top + 20: 
                     self.apply_slow()
                     self.rect.right = trash.rect.left
+                    play_sfx("trash_fall", 0.5)
 
         self.check_horizontal_collisions(platforms)
         self.apply_gravity(dt)
