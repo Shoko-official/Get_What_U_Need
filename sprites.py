@@ -460,6 +460,7 @@ class Bird(PhysObj):
         self.rect = self.image.get_rect(center=(x, y))
         self.status = 'walk'
         self.direction.x = dir_x
+        self.facing_right = self.direction.x > 0
         self.speed = random.randint(150, 250)
         self.visual_offset_y = 0
 
@@ -486,6 +487,7 @@ class Rat(PhysObj):
         self.rect.midbottom = (x, y)
         self.status = 'walk'
         self.direction.x = dir_x
+        self.facing_right = self.direction.x > 0
         self.speed = random.randint(50, 120)
         self.visual_offset_y = -10 
         self.velocity_y = 0
@@ -522,6 +524,9 @@ class DeadRat(pygame.sprite.Sprite):
             # Angle de -90 pour mettre le rat sur le dos sans être à l'envers
             self.image = pygame.transform.rotate(img, -90)
             self.playing = False
+        
+        if not facing_right:
+            self.image = pygame.transform.flip(self.image, True, False)
             
         self.rect = self.image.get_rect(midbottom=(x, y))
         
@@ -625,6 +630,7 @@ class Wolf(PhysObj):
         self.rect = pygame.Rect(0, 0, 80, 100)
         self.rect.midbottom = (x, y)
         self.direction.x = dir_x
+        self.facing_right = self.direction.x > 0
         self.speed = random.randint(200, 300)
         self.visual_offset_y = 0
 
@@ -654,6 +660,7 @@ class Bear(PhysObj):
         self.rect = pygame.Rect(0, 0, 100, 150)
         self.rect.midbottom = (x, y)
         self.direction.x = dir_x
+        self.facing_right = self.direction.x > 0
         self.speed = random.randint(100, 180)
         self.visual_offset_y = 0
 

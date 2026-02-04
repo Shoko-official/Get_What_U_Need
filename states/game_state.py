@@ -405,6 +405,7 @@ class GameState(State):
             if hit:
                 if isinstance(mob, Drone):
                     self.emitter.drone_hit(self.player.rect.centerx, self.player.rect.centery, self.particles)
+                    play_sfx("hurt", 0.4)
                 else:
                     if self.player.take_damage(1):
                         self.trigger_death("WASTED")
@@ -419,6 +420,7 @@ class GameState(State):
                 self.player.weed_count += 1
                 self.player.withdrawal = max(0, self.player.withdrawal - WEED_WITHDRAWAL_REDUCE)
                 self.player.just_healed = True
+                play_sfx("click", 0.2)
             
         for p in self.powerups:
             if collect_rect.colliderect(p.rect):
