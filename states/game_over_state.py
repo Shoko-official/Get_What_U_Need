@@ -62,10 +62,10 @@ class GameOverState(State):
         centre_x = self.SW // 2
         mouvement = math.sin(self.t * 3.0) * 5
 
-        title_str = "T'ES MORT..."
+        title_str = "WASTED"
         if self.status == "ARRESTED": title_str = "CHOPÉ PAR LES FLICS !"
-        elif self.status == "OVERDOSE": title_str = "BAD TRIP FATAL..."
-        elif self.status == "WASTED": title_str = "ÉPUISÉ PAR LE MANQUE"
+        elif self.status == "OVERDOSE": title_str = "ÉPUISÉ PAR LE MANQUE..."
+        elif self.status == "WASTED": title_str = "TUÉ DANS LE GHETTO..."
 
         # Ombre
         ombre = self.font_title.render(title_str, True, C_BLACK)
