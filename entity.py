@@ -14,6 +14,7 @@ class PhysObj(pygame.sprite.Sprite):
         self.on_ground = False
         
         self.status = 'idle'
+        self.facing_right = True
         
         self.image = pygame.Surface((32, 32))
         self.rect = self.image.get_rect(midbottom=(x, y))
