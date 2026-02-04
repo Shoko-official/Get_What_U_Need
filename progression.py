@@ -87,7 +87,7 @@ class PlayerProfile:
                     key = c_map.get(s_name, "weed")
                     break
                     
-        # Mapping nom affiché
+        # Mapping
         names = {
             "weed": "pochons",
             "blood": "fioles de sang",

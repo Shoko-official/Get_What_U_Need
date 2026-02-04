@@ -1,5 +1,5 @@
 {
-  "credits": 47334,
+  "credits": 48334,
   "quests": [
     {
       "id": "distance",
@@ -50,12 +50,12 @@
     "Countess_Vampire",
     "Shinobi"
   ],
-  "active_skin_set": "vampires",
-  "active_variant": "Countess_Vampire",
+  "active_skin_set": "werewolves",
+  "active_variant": "White_Werewolf",
   "stats": {
-    "total_dist": 490,
-    "total_weed": 91,
+    "total_dist": 709,
+    "total_weed": 138,
     "total_kills": 0
   },
-  "weed_stash": 18
+  "weed_stash": 65
 }
