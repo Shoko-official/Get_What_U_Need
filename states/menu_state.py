@@ -2,7 +2,7 @@ import pygame
 import math
 from state_machine import State
 from settings import *
-from asset_loader import asset_loader
+from asset_loader import asset_loader, play_sfx
 from states.game_state import GameState
 
 class MenuState(State):
@@ -87,14 +87,18 @@ class MenuState(State):
 
                     if bouton_fermer.collidepoint(souris) or not panel.collidepoint(souris):
                         self.show_rules = False
+                        play_sfx("click")
                 else:
                     if self.btn_play.collidepoint(souris):
+                        play_sfx("click")
                         gs = GameState(self.brain)
                         self.brain.change(gs)
 
                     if self.btn_rules.collidepoint(souris):
+                        play_sfx("click")
                         self.show_rules = True
                     if self.btn_quit.collidepoint(souris):
+                        play_sfx("click")
                         pygame.quit()
                         import sys
                         sys.exit()

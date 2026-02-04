@@ -7,7 +7,7 @@ from settings import *
 from sprites import Player, Obstacle, Weed, Bird, Rat, DeadRat, Prop, TrashObstacle, Police, PowerUp, Drone, Wolf, Bear
 
 from effects import ParticleEmitter, HUD, ParallaxBackground, ParallaxLayer
-from asset_loader import asset_loader
+from asset_loader import asset_loader, play_sfx
 from assets_registry import ASSETS
 from states.game_over_state import GameOverState
 
@@ -471,6 +471,11 @@ class GameState(State):
             self.player.frame_index = 0
             self.player.direction.x = 0 
             self.police.status = 'idle'
+            
+            if reason == "ARRESTED":
+                play_sfx("arrest", 0.8)
+            else:
+                play_sfx("game_over", 0.8)
 
     def draw(self, surface):
         self.render_surface.fill((25, 25, 30))

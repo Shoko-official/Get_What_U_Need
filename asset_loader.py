@@ -87,9 +87,18 @@ class AssetLoader:
         self.sounds.clear()
         self.anims.clear()
 
+    def play_sfx(self, name, volume=1.0):
+        if "sfx" in ASSETS["audio"] and name in ASSETS["audio"]["sfx"]:
+            path = ASSETS["audio"]["sfx"][name]
+            snd = self.fetch_snd(path)
+            if snd:
+                snd.set_volume(volume)
+                snd.play()
+
 # Instance unique
 asset_loader = AssetLoader()
 
 # raccourcis pour les faineants
 fetch_image = asset_loader.fetch_img
 get_animation = asset_loader.get_anim
+play_sfx = asset_loader.play_sfx
