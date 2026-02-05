@@ -47,7 +47,7 @@ class AssetLoader:
             return self._get_placeholder(s_path)
 
     def _get_placeholder(self, ref):
-        # Texture manquante -> on met un carré rose pour alerte
+        # Texture manquante -> on met un carré rose pour alerter
         if not self.silent: print(f"[Assets] Erreur texture : {ref}")
         pink = pygame.Surface((32, 32))
         pink.fill((255, 0, 255))
