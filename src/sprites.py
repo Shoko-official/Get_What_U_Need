@@ -158,6 +158,8 @@ class Player(PhysObj):
         if self.god_mode: return
         
         # Augmente le manque petit à petit
+        self.withdrawal = min(self.max_withdrawal, self.withdrawal + WITHDRAWAL_RATE)
+        
         if self.withdrawal >= self.max_withdrawal:
              if not hasattr(self, '_last_at_max_withdrawal') or not self._last_at_max_withdrawal:
                  self.just_reached_max_withdrawal = True
