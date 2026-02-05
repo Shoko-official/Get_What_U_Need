@@ -27,27 +27,32 @@ class MenuState(State):
         self.font_price = pygame.font.SysFont("arial", 20, bold=True)
 
         centre_x = self.SW // 2
-        top_y = self.SH // 2 - 120 
+        top_y = self.SH // 2 - 140 
 
         # Boutons menu plus compacts et élégants
-        bw, bh = 240, 55
+        bw, bh = 240, 50
         self.btn_play     = pygame.Rect(centre_x - bw // 2, top_y, bw, bh)
-        self.btn_missions = pygame.Rect(centre_x - bw // 2, top_y + 70, bw, bh)
-        self.btn_shop     = pygame.Rect(centre_x - bw // 2, top_y + 140, bw, bh)
-        self.btn_locker   = pygame.Rect(centre_x - bw // 2, top_y + 210, bw, bh)
-        self.btn_rules    = pygame.Rect(centre_x - bw // 2, top_y + 280, bw, bh)
-        self.btn_quit     = pygame.Rect(centre_x - bw // 2, top_y + 350, bw, bh)
+        self.btn_missions = pygame.Rect(centre_x - bw // 2, top_y + 60, bw, bh)
+        self.btn_shop     = pygame.Rect(centre_x - bw // 2, top_y + 120, bw, bh)
+        self.btn_locker   = pygame.Rect(centre_x - bw // 2, top_y + 180, bw, bh)
+        self.btn_audio    = pygame.Rect(centre_x - bw // 2, top_y + 240, bw, bh)
+        self.btn_rules    = pygame.Rect(centre_x - bw // 2, top_y + 300, bw, bh)
+        self.btn_quit     = pygame.Rect(centre_x - bw // 2, top_y + 360, bw, bh)
 
         self.show_rules = False
         self.show_missions = False
         self.show_shop = False
         self.show_locker = False
+        self.show_audio = False
         self.rules_alpha = 0
         self.mission_alpha = 0
         self.shop_alpha = 0
         self.locker_alpha = 0
+        self.audio_alpha = 0
         self.shop_scroll = 0
         self.t = 0.0
+        self.dragging_music = False
+        self.dragging_sfx = False
 
         self.rules_lines = [
             ("title", "GAMEPLAY"),
@@ -102,6 +107,22 @@ class MenuState(State):
         self.t += dt
         souris = pygame.mouse.get_pos()
 
+        # Gérer le déplacement du curseur
+        if self.dragging_music and pygame.mouse.get_pressed()[0]:
+            panel = self._panel_rect()
+            music_slider_rect = pygame.Rect(panel.left + 150, panel.top + 150, 400, 20)
+            vol = max(0.0, min(1.0, (souris[0] - music_slider_rect.left) / music_slider_rect.width))
+            progression.state["volume_music"] = vol
+            progression.commit()
+            pygame.mixer.music.set_volume(vol)
+
+        if self.dragging_sfx and pygame.mouse.get_pressed()[0]:
+            panel = self._panel_rect()
+            sfx_slider_rect = pygame.Rect(panel.left + 150, panel.top + 250, 400, 20)
+            vol = max(0.0, min(1.0, (souris[0] - sfx_slider_rect.left) / sfx_slider_rect.width))
+            progression.state["volume_sfx"] = vol
+            progression.commit()
+        
         if self.show_rules:
             self.rules_alpha = min(self.rules_alpha + 18, 255)
         else:
@@ -122,12 +143,42 @@ class MenuState(State):
         else:
             self.locker_alpha = max(self.locker_alpha - 18, 0)
 
+        if self.show_audio:
+            self.audio_alpha = min(self.audio_alpha + 18, 255)
+        else:
+            self.audio_alpha = max(self.audio_alpha - 18, 0)
+
         for ev in events:
             if ev.type == pygame.MOUSEWHEEL:
                 if self.show_shop:
                     # Scroll boutique
                     self.shop_scroll = max(0, self.shop_scroll - ev.y * 30)
 
+            if ev.type == pygame.MOUSEBUTTONUP and ev.button == 1:
+                self.dragging_music = False
+                self.dragging_sfx = False
+
+            if ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1:
+                # Audio sliders
+                if self.show_audio:
+                    panel = self._panel_rect()
+                    music_slider_rect = pygame.Rect(panel.left + 150, panel.top + 150, 400, 20)
+                    sfx_slider_rect = pygame.Rect(panel.left + 150, panel.top + 250, 400, 20)
+
+                    if music_slider_rect.collidepoint(souris):
+                        self.dragging_music = True
+                        vol = max(0.0, min(1.0, (souris[0] - music_slider_rect.left) / music_slider_rect.width))
+                        progression.state["volume_music"] = vol
+                        progression.commit()
+                        pygame.mixer.music.set_volume(vol)
+
+                    if sfx_slider_rect.collidepoint(souris):
+                        self.dragging_sfx = True
+                        vol = max(0.0, min(1.0, (souris[0] - sfx_slider_rect.left) / sfx_slider_rect.width))
+                        progression.state["volume_sfx"] = vol
+                        progression.commit()
+                        play_sfx("click", vol)
+            
             if ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1:
                 if self.show_rules:
                     panel = self._panel_rect()
@@ -247,6 +298,14 @@ class MenuState(State):
                             if btn_claim.collidepoint(souris):
                                 if progression.claim(i):
                                     play_sfx("click")
+
+                elif self.show_audio:
+                    panel = self._panel_rect()
+                    bouton_fermer = pygame.Rect(panel.right - 60, panel.top + 10, 50, 50)
+                    if bouton_fermer.collidepoint(souris) or not panel.collidepoint(souris):
+                        self.show_audio = False
+                        play_sfx("click")
+                
                 else:
                     if self.btn_play.collidepoint(souris):
                         play_sfx("click")
@@ -265,6 +324,10 @@ class MenuState(State):
                         play_sfx("click")
                         self.show_locker = True
 
+                    if self.btn_audio.collidepoint(souris):
+                        play_sfx("click")
+                        self.show_audio = True
+                    
                     if self.btn_rules.collidepoint(souris):
                         play_sfx("click")
                         self.show_rules = True
@@ -292,6 +355,7 @@ class MenuState(State):
         self._draw_button(surface, self.btn_missions, "MISSIONS", souris)
         self._draw_button(surface, self.btn_shop,     "BOUTIQUE", souris)
         self._draw_button(surface, self.btn_locker,   "CASIER", souris)
+        self._draw_button(surface, self.btn_audio,    "AUDIO", souris)
         self._draw_button(surface, self.btn_rules,    "RÈGLES", souris)
         self._draw_button(surface, self.btn_quit,     "QUITTER", souris)
         
@@ -306,6 +370,8 @@ class MenuState(State):
             self._draw_shop_panel(surface)
         if self.locker_alpha > 0:
             self._draw_locker_panel(surface)
+        if self.audio_alpha > 0:
+            self._draw_audio_panel(surface)
 
     def _draw_scrolling_label(self, surface, text, rect, font, color=(255, 255, 255)):
         img = font.render(text, True, color)
@@ -823,3 +889,77 @@ class MenuState(State):
                 r_col = (255, 200, 50) if not q["claimed"] else (100, 90, 60)
                 r_surf = self.font_price.render(r_txt, True, r_col)
                 surface.blit(r_surf, (rect.right - r_surf.get_width() - 20, rect.bottom - 35))
+
+def _draw_audio_panel(self, surface):
+        panel = self._panel_rect()
+
+        # Fond Glassmorphism
+        overlay = pygame.Surface((PANEL_W, PANEL_H), pygame.SRCALPHA)
+        overlay.fill((20, 15, 25, 240))
+        surface.blit(overlay, panel.topleft)
+
+        THEME_COLOR = (100, 200, 255)
+        pygame.draw.rect(surface, THEME_COLOR, panel, width=3, border_radius=20)
+
+        # En-tête
+        header_rect = pygame.Rect(panel.left, panel.top, panel.width, 80)
+        pygame.draw.rect(surface, (THEME_COLOR[0], THEME_COLOR[1], THEME_COLOR[2], 50), header_rect, border_top_left_radius=20, border_top_right_radius=20)
+
+        # Bouton Fermer
+        btn_close = pygame.Rect(panel.right - 60, panel.top + 10, 50, 50)
+        souris = pygame.mouse.get_pos()
+        close_col = (255, 50, 50) if btn_close.collidepoint(souris) else (200, 200, 200)
+        surface.blit(self.font_title.render("×", True, close_col), btn_close.topleft)
+
+        # Titre
+        title = self.font_title.render("AUDIO", True, THEME_COLOR)
+        title = pygame.transform.scale(title, (int(title.get_width() * 0.6), int(title.get_height() * 0.6)))
+        surface.blit(title, (panel.left + 30, panel.top + 15))
+
+        # Musique volume slider
+        music_label = self.font_rules_title.render("MUSIQUE", True, (200, 200, 220))
+        surface.blit(music_label, (panel.left + 30, panel.top + 120))
+
+        music_vol = progression.state.get("volume_music", 0.2)
+        music_slider_rect = pygame.Rect(panel.left + 150, panel.top + 150, 400, 20)
+
+        # Slider background
+        pygame.draw.rect(surface, (30, 30, 40), music_slider_rect, border_radius=10)
+
+        # Slider fill
+        fill_width = int(music_slider_rect.width * music_vol)
+        fill_rect = pygame.Rect(music_slider_rect.left, music_slider_rect.top, fill_width, music_slider_rect.height)
+        pygame.draw.rect(surface, (50, 150, 255), fill_rect, border_radius=10)
+
+        # Slider handle
+        handle_x = music_slider_rect.left + fill_width
+        pygame.draw.circle(surface, (100, 200, 255), (handle_x, music_slider_rect.centery), 15)
+        pygame.draw.circle(surface, (255, 255, 255), (handle_x, music_slider_rect.centery), 12)
+
+        # Volume percentage
+        vol_text = self.font_rules_body.render(f"{int(music_vol * 100)}%", True, (200, 200, 220))
+        surface.blit(vol_text, (music_slider_rect.right + 20, music_slider_rect.centery - vol_text.get_height() // 2))
+
+        # SFX volume slider
+        sfx_label = self.font_rules_title.render("EFFETS SONORES", True, (200, 200, 220))
+        surface.blit(sfx_label, (panel.left + 30, panel.top + 220))
+
+        sfx_vol = progression.state.get("volume_sfx", 1.0)
+        sfx_slider_rect = pygame.Rect(panel.left + 150, panel.top + 250, 400, 20)
+
+        # Slider background
+        pygame.draw.rect(surface, (30, 30, 40), sfx_slider_rect, border_radius=10)
+
+        # Slider fill
+        fill_width = int(sfx_slider_rect.width * sfx_vol)
+        fill_rect = pygame.Rect(sfx_slider_rect.left, sfx_slider_rect.top, fill_width, sfx_slider_rect.height)
+        pygame.draw.rect(surface, (255, 150, 50), fill_rect, border_radius=10)
+
+        # Slider handle
+        handle_x = sfx_slider_rect.left + fill_width
+        pygame.draw.circle(surface, (255, 200, 100), (handle_x, sfx_slider_rect.centery), 15)
+        pygame.draw.circle(surface, (255, 255, 255), (handle_x, sfx_slider_rect.centery), 12)
+
+        # Volume percentage
+        vol_text = self.font_rules_body.render(f"{int(sfx_vol * 100)}%", True, (200, 200, 220))
+        surface.blit(vol_text, (sfx_slider_rect.right + 20, sfx_slider_rect.centery - vol_text.get_height() // 2))
