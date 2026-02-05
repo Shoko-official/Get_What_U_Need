@@ -80,6 +80,7 @@ class GameOverState(State):
         surface.blit(titre, titre.get_rect(centerx=centre_x, centery=TITLE_Y + mouvement))
 
     def _draw_score(self, surface):
+        centre_x = self.SW // 2
         # Score actuel
         txt = f"SCORE : {self.score}m"
         score_surf = self.font_info.render(txt, True, C_GOLD)
