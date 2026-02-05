@@ -13,9 +13,32 @@ def get_mask(surface):
 
 class Player(PhysObj):
     def __init__(self, groups):
-        self._layer = 2 # Au dessus du sol
         super().__init__(groups, 100, FLOOR_Y - 50)
         
+        # RL Integration
+        self.ai_mode = False
+        self.current_ai_action = 0 # 0 = Run | 1 = Jump | 2 = Fast Fall
+
+        # Rewards
+        self.just_jumped = False
+        self.just_fast_fell = False
+        self.just_landed = False
+        self.just_hit_enemy = False
+        self.just_dodged_enemy = False
+        self.just_collected_weed = False
+        self.just_used_shield = False
+        self.just_used_magnet = False
+        self.just_took_damage = False
+        self.just_died = False
+        self.just_reached_max_withdrawal = False
+        self.just_reached_min_withdrawal = False
+        self.just_reached_max_speed = False
+        self.just_reached_min_speed = False
+        self.just_reached_max_combo = False
+        self.just_reached_min_combo = False
+        self.just_reached_max_hp = False
+        self.just_reached_min_hp = False
+
         # Chargement des assets
         self.load_all()
         
@@ -83,6 +106,16 @@ class Player(PhysObj):
         self.direction.x = 1 # Avance tout le temps
         self.facing_right = True
         
+        if self.ai_mode:
+            if self.current_ai_action == 1: # Jump
+                if self.on_ground:
+                    self.jump()
+                    self.just_jumped = True # Reward 
+            elif self.current_ai_action == 2: # Fast Fall
+                if not self.on_ground:
+                    self.velocity_y = max(self.velocity_y, FAST_FALL_FORCE)
+                    self.just_fast_fell = True # Reward
+            return
         keys = pygame.key.get_pressed()
         
         if self.god_mode:
@@ -255,6 +288,7 @@ class Player(PhysObj):
 
     def update(self, dt, platforms=None, trash_obstacles=None, weed_group=None, powerups_group=None, mobs_group=None, *args):
         # Update général appelé chaque frame
+        self.reset_reward_flags()
         if self.hp <= 0 or self.withdrawal >= self.max_withdrawal or self.rect.top > DEATH_Y:
             self.check_state()
             self.animate()
@@ -336,6 +370,27 @@ class Player(PhysObj):
                     self.image.set_alpha(150)
                 else:
                     self.image.set_alpha(255)
+
+    def reset_reward_flags(self):
+        """Reset des flags de récompense pour la nouvelle frame."""
+        self.just_jumped = False
+        self.just_fast_fell = False
+        self.just_landed = False
+        self.just_hit_enemy = False
+        self.just_dodged_enemy = False
+        self.just_collected_weed = False
+        self.just_used_shield = False
+        self.just_used_magnet = False
+        self.just_took_damage = False
+        self.just_died = False
+        self.just_reached_max_withdrawal = False
+        self.just_reached_min_withdrawal = False
+        self.just_reached_max_speed = False
+        self.just_reached_min_speed = False
+        self.just_reached_max_combo = False
+        self.just_reached_min_combo = False
+        self.just_reached_max_hp = False
+        self.just_reached_min_hp = False
 
 class PowerUp(pygame.sprite.Sprite):
     def __init__(self, x, y, type_name):
@@ -542,9 +597,39 @@ class Bird(PhysObj):
         self.image = frames[int(pygame.time.get_ticks() / 100) % len(frames)]
         self.mask = get_mask(self.image)
 
-class Rat(PhysObj):
-    def __init__(self, groups, x, y, dir_x=-1):
+# Classe générique pour les mobs terrestres (Loup / Ours)
+class GroundMob(PhysObj):
+    def __init__(self, groups, x, y, key, scale, speed_range, size, dir_x=-1):
         super().__init__(groups, x, y)
+        self.anims = {
+            'run': asset_loader.get_anim(key, 'run', scale),
+            'idle': asset_loader.get_anim(key, 'idle', scale)
+        }
+        self.status = 'run'
+        self.image = self.anims['run'][0]
+        self.mask = get_mask(self.image)
+        self.rect = pygame.Rect(0, 0, size[0], size[1])
+        self.rect.midbottom = (x, y)
+        self.direction.x = dir_x
+        self.facing_right = dir_x > 0
+        self.speed = random.randint(*speed_range)
+        self.visual_offset_y = 0
+
+    def update(self, dt, platforms=None, *args):
+        self.apply_gravity(dt)
+        self.rect.x += self.direction.x * self.speed * dt
+        self.on_ground = False
+        if platforms: self.check_platform_collisions(platforms)
+        
+        # Anim loop
+        frames = self.anims[self.status]
+        self.image = frames[int(pygame.time.get_ticks() / 100) % len(frames)]
+        self.mask = get_mask(self.image)
+
+class Rat(GroundMob):
+    def __init__(self, groups, x, y, dir_x=-1):
+        # Init manuel car Rat utilise 'walk' et pas 'run'
+        PhysObj.__init__(self, groups, x, y)
         self.anims = {
             'walk': asset_loader.get_anim('rat', 'walk', 1.5),
             'idle': asset_loader.get_anim('rat', 'idle', 1.5)
@@ -559,17 +644,6 @@ class Rat(PhysObj):
         self.speed = random.randint(50, 120)
         self.visual_offset_y = -10 
         self.velocity_y = 0
-
-    def update(self, dt, platforms=None, *args):
-        self.apply_gravity(dt)
-        self.rect.x += self.direction.x * self.speed * dt
-        self.on_ground = False
-        if platforms: self.check_platform_collisions(platforms)
-        
-        # Anim
-        frames = self.anims[self.status]
-        self.image = frames[int(pygame.time.get_ticks() / 100) % len(frames)]
-        self.mask = get_mask(self.image)
 
 class DeadRat(pygame.sprite.Sprite):
     def __init__(self, x, y, groups, play_anim=False, facing_right=True):
@@ -671,34 +745,7 @@ class Drone(PhysObj):
         self.image = frames[int(self.idx)]
         self.mask = get_mask(self.image)
 
-# Classe générique pour les mobs terrestres (Loup / Ours)
-class GroundMob(PhysObj):
-    def __init__(self, groups, x, y, key, scale, speed_range, size, dir_x=-1):
-        super().__init__(groups, x, y)
-        self.anims = {
-            'run': asset_loader.get_anim(key, 'run', scale),
-            'idle': asset_loader.get_anim(key, 'idle', scale)
-        }
-        self.status = 'run'
-        self.image = self.anims['run'][0]
-        self.mask = get_mask(self.image)
-        self.rect = pygame.Rect(0, 0, size[0], size[1])
-        self.rect.midbottom = (x, y)
-        self.direction.x = dir_x
-        self.facing_right = dir_x > 0
-        self.speed = random.randint(*speed_range)
-        self.visual_offset_y = 0
 
-    def update(self, dt, platforms=None, *args):
-        self.apply_gravity(dt)
-        self.rect.x += self.direction.x * self.speed * dt
-        self.on_ground = False
-        if platforms: self.check_platform_collisions(platforms)
-        
-        # Anim loop
-        frames = self.anims[self.status]
-        self.image = frames[int(pygame.time.get_ticks() / 100) % len(frames)]
-        self.mask = get_mask(self.image)
 
 class Wolf(GroundMob):
     def __init__(self, groups, x, y, dir_x=-1):
