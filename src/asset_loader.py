@@ -229,8 +229,8 @@ class AssetLoader:
                         s.set_volume(vol * global_vol)
                     except:
                         s.set_volume(vol)
-                        s.play()
-                    
+                    s.play()
+
         except KeyError:
             pass # Clé audio manquante, pas grave
 
