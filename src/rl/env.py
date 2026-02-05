@@ -74,6 +74,7 @@ class GetMyWeedEnv(gym.Env):
         if p.just_reached_min_withdrawal: reward += 2.0
         if p.just_reached_max_speed:  reward += 0.5
         if p.just_reached_max_hp:     reward += 1.0
+        if p.just_landed:             reward += 0.2 # Evite que le bot ait trop peur de sauter
 
         # Malus (les erreurs)
         if p.just_took_damage:        reward -= 5.0
