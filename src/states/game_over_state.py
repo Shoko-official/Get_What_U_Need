@@ -80,10 +80,17 @@ class GameOverState(State):
         surface.blit(titre, titre.get_rect(centerx=centre_x, centery=TITLE_Y + mouvement))
 
     def _draw_score(self, surface):
-        centre_x = self.SW // 2
-        txt = f"SCORE : {self.score}"
+        # Score actuel
+        txt = f"SCORE : {self.score}m"
         score_surf = self.font_info.render(txt, True, C_GOLD)
-        surface.blit(score_surf, score_surf.get_rect(center=(centre_x, self.SH // 2 - 20)))
+        surface.blit(score_surf, score_surf.get_rect(center=(centre_x, self.SH // 2 - 50)))
+
+        # Meilleur score
+        best = progression.state.get("best_distance", 0)
+        best_txt = f"MEILLEUR : {best}m"
+        best_color = (100, 255, 150) if self.score >= best else C_WHITE_DIM
+        best_surf = self.font_btn.render(best_txt, True, best_color)
+        surface.blit(best_surf, best_surf.get_rect(center=(centre_x, self.SH // 2 - 5)))
 
     def _draw_button(self, surface, rect, texte, souris):
         survole = rect.collidepoint(souris)
