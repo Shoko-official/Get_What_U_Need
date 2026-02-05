@@ -49,15 +49,18 @@ class GameState(State):
         }
 
     def init_audio(self):
-        # On lance la zik si on peut
+        # La musique est déjà lancée au démarrage du jeu dans main.py
+        # On s'assure juste que le volume est correct
         try:
             if not pygame.mixer.get_init(): return
-            p = str(ASSET_DIR / ASSETS["audio"]["music_bg"])
-            pygame.mixer.music.load(p)
             from progression import progression
             vol = progression.state.get("volume_music", MUSIC_VOLUME)
             pygame.mixer.music.set_volume(vol)
-            pygame.mixer.music.play(-1)
+           # Si la musique ne joue pas (cas rare), on la lance
+            if not pygame.mixer.music.get_busy():
+                p = str(ASSET_DIR / ASSETS["audio"]["music_bg"])
+                pygame.mixer.music.load(p)
+                pygame.mixer.music.play(-1)
         except: pass
 
     def init_graphics(self):
