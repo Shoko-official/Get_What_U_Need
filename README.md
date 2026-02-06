@@ -1,4 +1,4 @@
-# Get What U Need — Bad Trip Edition v1.1.1
+# Get What U Need - Bad Trip Edition v1.1.1
 
 Un endless runner 2D dark & gritty où vous devez fuir dans la rue, collecter de la weed pour survivre, et éviter la police à tout prix.
 
@@ -268,3 +268,16 @@ Une fois que vous avez assez de crédits, rendez-vous dans la **BOUTIQUE** pour 
 - Dans la **forêt**, faites attention : les loups et ours sont plus gros et plus rapides
 - Les **drones** n'apparaissent qu'après 5000m. Prenez le temps de vous installer avant
 - Si vous êtes ralenti par des déchets, utilisez le saut pour reprendre de la vitesse
+
+---
+
+## 🤝 Contribution
+N'hésitez pas à contribuer, nous sommes plutôt réactif.
+Idées :
+- Amélioration des assets
+- Correction d'une logique de jeu
+- Amélioration du modèle de Reinforce Learning
+- Autres choses qui vous semblent pertinentes !
+
+Un grand merci à vous, n'hésitez pas à déposer une star ⭐.
+Bon jeu !
